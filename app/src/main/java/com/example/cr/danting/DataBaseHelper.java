@@ -9,10 +9,10 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 
 public class DataBaseHelper extends SQLiteOpenHelper {
-    private Context mContext;
+
     public DataBaseHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
-        mContext=context;
+
     }
 
     @Override

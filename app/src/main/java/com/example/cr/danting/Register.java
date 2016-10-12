@@ -22,6 +22,7 @@ public class Register extends Activity {
 
     private DataBaseHelper dataBaseHelper;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,9 +59,11 @@ public class Register extends Activity {
 
 
     public int zhuce(String username, String password) {
+        username=username.replace(" ", "");
+        password=password.replace(" ", "");
 
 
-        if ((username == null || username.length() <= 0) || (password == null || password.length() <= 0)) {
+        if (isEmpty(username) || isEmpty(password)) {
             return 0;
 
         } else {
@@ -90,8 +93,22 @@ public class Register extends Activity {
             }
         }
 
+    }
 
+    public static boolean isEmpty( String input )
+    {
+        if ( input == null || "".equals( input ) )
+            return true;
 
+        for ( int i = 0; i < input.length(); i++ )
+        {
+            char c = input.charAt( i );
+            if ( c != ' ' && c != '\t' && c != '\r' && c != '\n' )
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

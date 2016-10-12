@@ -24,11 +24,12 @@ public class Login extends Activity {
     private DataBaseHelper dataBaseHelper;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_layout);
-        imageView=(ImageView)findViewById(R.id.music);
+        imageView = (ImageView) findViewById(R.id.music);
         imageView.setImageResource(R.drawable.music);
 
 
@@ -41,43 +42,77 @@ public class Login extends Activity {
             @Override
             public void onClick(View view) {
                 String username_text = Login.this.user.getText().toString();
-                String password_text = Login.this.user.getText().toString();
+                String password_text = Login.this.password.getText().toString();
+                int i=check(username_text, password_text,dataBaseHelper);
 
-                if (check(username_text, password_text)) {
+                if (i==1) {
                     Intent intent = new Intent(Login.this, MainActivity.class);
                     startActivity(intent);
 
-                } else {
-                    Toast.makeText(getApplicationContext(),"请先注册",Toast.LENGTH_SHORT).show();
+                } else if(i==0){
+                    Toast.makeText(getApplicationContext(), "请先注册", Toast.LENGTH_SHORT).show();
 
+                }
+                else{
+                    Toast.makeText(getApplicationContext(), "用户名或密码输入错误", Toast.LENGTH_SHORT).show();
                 }
             }
         });
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent=new Intent(Login.this,Register.class);
+                Intent intent = new Intent(Login.this, Register.class);
                 startActivity(intent);
             }
         });
     }
 
 
+    public int check(String username, String password,DataBaseHelper d) {
+        username=username.replace(" ", "");
+        password=password.replace(" ", "");
 
 
-    public boolean check(String username, String password) {
-        SQLiteDatabase db = dataBaseHelper.getReadableDatabase();
-        String sql = "select * from User where username=? and password=?";
-        Cursor cursor = db.rawQuery(sql, new String[]{username, password});
-        if (cursor.moveToFirst()) {
+        if (isEmpty(username) || isEmpty(password)){
+            return 0;//未注册
+        }
+        else{
+
+            SQLiteDatabase db=d.getReadableDatabase();
+            String sql = "select * from User";
+            Cursor cursor = db.rawQuery(sql,null);
+            int p=2;
+            while(cursor.moveToNext()){
+                if(username.equals(cursor.getString(1))&&password.equals(cursor.getString(2)))
+                {
+                    p=1;
+                    System.out.println(username+" "+password);
+                    System.out.println(cursor.getInt(0)+" "+cursor.getString(1)+" "+cursor.getString(2));
+                    System.out.println(username.equals(cursor.getString(1))+" "+password.equals(cursor.getString(2)));
+                    return p;
+                }
+            }
             cursor.close();
-            return true;
+            return p;
 
         }
 
-        return false;
     }
+    public static boolean isEmpty( String input )
+    {
+        if ( input == null || "".equals( input ) )
+            return true;
 
+        for ( int i = 0; i < input.length(); i++ )
+        {
+            char c = input.charAt( i );
+            if ( c != ' ' && c != '\t' && c != '\r' && c != '\n' )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 
 
 }
