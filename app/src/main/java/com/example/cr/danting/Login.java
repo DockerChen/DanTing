@@ -28,8 +28,8 @@ public class Login extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.login_layout);
-        imageView = (ImageView) findViewById(R.id.music);
+        setContentView(R.layout.login_layout);      //加载布局文件
+        imageView = (ImageView) findViewById(R.id.music);   //加载ImageView控件
         imageView.setImageResource(R.drawable.music);
 
 
@@ -46,7 +46,7 @@ public class Login extends Activity {
                 int i=check(username_text, password_text,dataBaseHelper);
 
                 if (i==1) {
-                    Intent intent = new Intent(Login.this, MainActivity.class);
+                    Intent intent = new Intent(Login.this, MusicActivity.class);
                     startActivity(intent);
 
                 } else if(i==0){
@@ -86,9 +86,9 @@ public class Login extends Activity {
                 if(username.equals(cursor.getString(1))&&password.equals(cursor.getString(2)))
                 {
                     p=1;
-                    System.out.println(username+" "+password);
-                    System.out.println(cursor.getInt(0)+" "+cursor.getString(1)+" "+cursor.getString(2));
-                    System.out.println(username.equals(cursor.getString(1))+" "+password.equals(cursor.getString(2)));
+//                    System.out.println(username+" "+password);
+//                    System.out.println(cursor.getInt(0)+" "+cursor.getString(1)+" "+cursor.getString(2));
+//                    System.out.println(username.equals(cursor.getString(1))+" "+password.equals(cursor.getString(2)));
                     return p;
                 }
             }
