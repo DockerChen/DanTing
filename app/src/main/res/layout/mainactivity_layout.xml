@@ -8,12 +8,13 @@
 
     <TextView
         android:text="歌曲列表"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
+        android:gravity="center_horizontal"
         android:id="@+id/gequ"
         android:textSize="36sp"
-        android:textColor="?attr/actionMenuTextColor" />
+        android:background="@android:color/background_dark"
+        android:textColor="@android:color/darker_gray" />
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"

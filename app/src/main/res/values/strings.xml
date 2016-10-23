@@ -3,4 +3,15 @@
     <string name="message_play">music play...</string>
     <string name="message_pause">music pause...</string>
     <string name="message_stop">music stop...</string>
+    <string-array name="song_names">
+        <item>God Is a Girl</item>
+        <item>一次就好</item>
+        <item>一笑倾城</item>
+        <item>你还要我怎样</item>
+        <item>多幸运</item>
+        <item>斑马，斑马</item>
+        <item>演员</item>
+        <item>绅士</item>
+        <item>陪你度过漫长岁月</item>
+    </string-array>
 </resources>

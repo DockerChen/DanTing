@@ -20,7 +20,6 @@ import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,7 +35,7 @@ public class MusicActivity extends Activity {
     //歌曲状态显示
     private TextView display;
     //单句歌词显示
-    private  TextView lrc;
+    private TextView lrc;
     //歌曲播放时间显示
     private TextView time_start, time_end;
     //歌曲切换，播放停止按钮
@@ -47,8 +46,12 @@ public class MusicActivity extends Activity {
 
     private View statueBar;
     private LyricInfo lyricInfo;
+    //单个歌曲名字
     private String song_name;
-
+    //所有歌曲名字
+    private String song_names[] = null;
+    //当前播放歌曲位置
+    private int position = 0;
     //定义Handle，用于接受子线程发送的数据， 并用此数据配合主线程更新UI
     MyHandler myHandler = new MyHandler();
 
@@ -61,15 +64,17 @@ public class MusicActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.musicactivity_layout);
-        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.KITKAT){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             setTranslucentStatus();
         }
-        Intent intent=getIntent();
-        song_name=intent.getStringExtra("song_name");
-        System.out.println("intent----"+song_name);
+        Intent intent = getIntent();
+        song_name = intent.getStringExtra("song_name");
+        System.out.println("intent----" + song_name);
+        //获取所有歌曲名
+        song_names = this.getResources().getStringArray(R.array.song_names);
+        //初始化
         initAllViews();
         initAllDatum(song_name);
-
 
 
         //播放，暂停
@@ -88,6 +93,69 @@ public class MusicActivity extends Activity {
                     display.setText(R.string.message_pause);
 
                 }
+
+            }
+        });
+
+
+        //切换到上一首歌
+        forward.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+
+                try {
+                    int current=0;
+                    for(int i=0;i<song_names.length;i++){
+                        if(song_names[i].equals(song_name)){
+                            current=i;
+                        }
+                    }
+                    position=current;
+                    position--;
+                    if(position<0){
+                        position=song_names.length-1;
+                    }
+                    song_name=song_names[position];
+                    initMediaPlayer();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                display.setText("previous song...");
+
+
+
+            }
+        });
+        //切换到下一首歌
+        next.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+                try {
+                    int current=0;
+                    for(int i=0;i<song_names.length;i++){
+                        if(song_names[i].equals(song_name)){
+                            current=i;
+                        }
+                    }
+                    position=current;
+                    position++;
+                    if(position>=song_names.length){
+                        position=0;
+                    }
+                    song_name=song_names[position];
+                    initMediaPlayer();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                display.setText("next song...");
+
 
             }
         });
@@ -120,39 +188,6 @@ public class MusicActivity extends Activity {
 
             }
         });
-        //切换到上一首歌
-        forward.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.reset();
-                    try {
-                        initMediaPlayer();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    display.setText(R.string.message_stop);
-                }
-
-
-            }
-        });
-        //切换到下一首歌
-        next.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.reset();
-                    try {
-                        initMediaPlayer();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    display.setText(R.string.message_stop);
-                }
-
-            }
-        });
 
         //初始化mediaplayer
         try {
@@ -167,7 +202,7 @@ public class MusicActivity extends Activity {
     /*监听返回键*/
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode==KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
             Intent intent = new Intent();
             intent.setClass(MusicActivity.this, MainActivity.class);
             startActivity(intent);
@@ -182,12 +217,11 @@ public class MusicActivity extends Activity {
     }
 
 
-
     /*视图初始化*/
-    private void initAllViews(){
+    private void initAllViews() {
         display = (TextView) findViewById(R.id.display);
         display_lrc = (TextView) findViewById(R.id.display_lrc);
-        lrc=(TextView)findViewById(R.id.lrc);
+        lrc = (TextView) findViewById(R.id.lrc);
         time_start = (TextView) findViewById(R.id.time_start);
         time_end = (TextView) findViewById(R.id.time_end);
         play = (ImageButton) findViewById(R.id.play);
@@ -196,8 +230,8 @@ public class MusicActivity extends Activity {
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         MyThread myThread = new MyThread();
         new Thread(myThread).start();
-        statueBar=findViewById(R.id.statue_bar);
-        statueBar.getLayoutParams().height=getStatusBarHeight();
+        statueBar = findViewById(R.id.statue_bar);
+        statueBar.getLayoutParams().height = getStatusBarHeight();
 
 
     }
@@ -210,73 +244,89 @@ public class MusicActivity extends Activity {
         window.setAttributes(params);
     }
 
-    public int getStatusBarHeight(){
-        int result=0;
-        int resourceId=getResources().getIdentifier("status_bar_height","dimen","android");
-        if(resourceId>0){
-            result=getResources().getDimensionPixelSize(resourceId);
+    public int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
 
         }
         return result;
     }
 
 
-
     private void initAllDatum(String song_name) {
-        String string = "lrc/"+song_name+".lrc";
+        String string = "lrc/" + song_name + ".lrc";
+        System.out.println("initalldatum--------" + string);
+
+//        String string_lrc = getFromAssets(string);
+//        System.out.println(string_lrc);
 //        InputStream in = getResources().openRawResource(R.raw.yici_lrc);
-        InputStream in= null;
+//        InputStream in= null;
+//        try {
+//            in = getAssets().open(string);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        display_lrc.setText(string_lrc);
         try {
-            in = getResources().getAssets().open(string);
+            setupLyricResource(string);
+            StringBuffer stringBuffer = new StringBuffer();
+            if (lyricInfo != null && lyricInfo.song_lines != null) {
+                int size = lyricInfo.song_lines.size();
+                for (int i = 0; i < size; i++) {
+                    stringBuffer.append(lyricInfo.song_lines.get(i).content + "\n");
+                    System.out.println("s_time: " + lyricInfo.song_lines.get(i).s_time);
+                    System.out.println(lyricInfo.song_lines.get(i).content);
+                }
+                display_lrc.setText(stringBuffer.toString());
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+//    public String getFromAssets(String fileName){
+//        String Result="";
+//        try {
+//            InputStreamReader inputReader = new InputStreamReader( getResources().getAssets().open(fileName) );
+//            BufferedReader bufReader = new BufferedReader(inputReader);
+//            String line="";
+//
+//            while((line = bufReader.readLine()) != null)
+//                Result += line;
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return Result;
+//    }
+
+
+    private void setupLyricResource(String fileName) {
+
+        try {
+            lyricInfo = new LyricInfo();
+            lyricInfo.song_lines = new ArrayList<>();
+            InputStreamReader inputStreamReader = new InputStreamReader(getResources().getAssets().open(fileName));
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+                analyzeLyric(lyricInfo, line);
+
+            }
+            reader.close();
+            inputStreamReader.close();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (in != null) {
-            try {
-                setupLyricResource(in, "GBK");
-                StringBuffer stringBuffer = new StringBuffer();
-                if (lyricInfo != null && lyricInfo.song_lines != null) {
-                    int size = lyricInfo.song_lines.size();
-                    for (int i = 0; i < size; i++) {
-                        stringBuffer.append(lyricInfo.song_lines.get(i).content + "\n");
-                        System.out.println("s_time: "+lyricInfo.song_lines.get(i).s_time);
-                        System.out.println(lyricInfo.song_lines.get(i).content);
-                    }
-                    display_lrc.setText(stringBuffer.toString());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
 
-        }
-        else{
-            System.out.println("error---------");
-        }
-    }
-
-
-
-
-    private void setupLyricResource(InputStream inputStream, String charsetName) {
-        if (inputStream != null) {
-            try {
-                lyricInfo = new LyricInfo();
-                lyricInfo.song_lines = new ArrayList<>();
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, charsetName);
-                BufferedReader reader = new BufferedReader(inputStreamReader);
-                String line = null;
-                while ((line = reader.readLine()) != null) {
-                    analyzeLyric(lyricInfo, line);
-
-                }
-                reader.close();
-                inputStream.close();
-                inputStreamReader.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     /*逐行解析歌词内容*/
@@ -314,7 +364,7 @@ public class MusicActivity extends Activity {
             LineInfo lineInfo = new LineInfo();
             lineInfo.content = line.substring(10, line.length());
             lineInfo.start = measureStarTimeMillis(line.substring(0, 10));
-            lineInfo.s_time=line.substring(1,9);
+            lineInfo.s_time = line.substring(1, 9);
             lyricInfo.song_lines.add(lineInfo);
 
         }
@@ -343,19 +393,21 @@ public class MusicActivity extends Activity {
         String s_time;
 
     }
+
     /*音乐播放器初始化*/
     private void initMediaPlayer() throws IOException {
-        AssetManager am = getAssets();//获得该应用的AssetManager
+        AssetManager am = this.getAssets();//获得该应用的AssetManager
         AssetFileDescriptor afd = null;
-        String string="song/"+song_name+".mp3";
+        String string = "song/" + song_name + ".mp3";
+        System.out.println("initMediaPlayer------" + string);
         try {
             afd = am.openFd(string);
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            mediaPlayer.prepare(); //准备
         } catch (IOException e) {
             e.printStackTrace();
         }
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setDataSource(afd.getFileDescriptor());
-        mediaPlayer.prepare(); //准备
 
 
 //        try {
@@ -400,39 +452,39 @@ public class MusicActivity extends Activity {
                 time_start.setText(simpleDateFormat.format(position).toString());
 //                System.out.println("position: "+simpleDateFormat1.format(position));
                 time_end.setText(simpleDateFormat.format(time).toString());
-                String string="lrc/"+song_name+".lrc";
+                String string = "lrc/" + song_name + ".lrc";
 
                 /*ceshi*/
-                InputStream in = null;
+//                InputStream in = null;
+//                try {
+//                    in = getResources().getAssets().open(string);
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//                if (in != null) {
                 try {
-                    in = getResources().getAssets().open(string);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if (in != null) {
-                    try {
-                        String geci;
-                        setupLyricResource(in, "GBK");
-                        StringBuffer stringBuffer = new StringBuffer();
-                        if (lyricInfo != null && lyricInfo.song_lines != null) {
-                            int size = lyricInfo.song_lines.size();
-                            for (int i = 0; i < size; i++) {
-                                stringBuffer.append(lyricInfo.song_lines.get(i).content + "\n");
-                                geci=lyricInfo.song_lines.get(i).content;
-                                if(position>=0&&(position>=lyricInfo.song_lines.get(i).start)) {
-                                    lrc.setText(geci);
+                    String geci;
+                    setupLyricResource(string);
+                    StringBuffer stringBuffer = new StringBuffer();
+                    if (lyricInfo != null && lyricInfo.song_lines != null) {
+                        int size = lyricInfo.song_lines.size();
+                        for (int i = 0; i < size; i++) {
+                            stringBuffer.append(lyricInfo.song_lines.get(i).content + "\n");
+                            geci = lyricInfo.song_lines.get(i).content;
+                            if (position >= 0 && (position >= lyricInfo.song_lines.get(i).start)) {
+                                lrc.setText(geci);
 
-                                }
+                            }
 //                                System.out.println("s_time: "+lyricInfo.song_lines.get(i).s_time);
 //                                System.out.println(lyricInfo.song_lines.get(i).content);
-                            }
-                            display_lrc.setText(stringBuffer.toString());
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        display_lrc.setText(stringBuffer.toString());
                     }
-
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+
+//                }
             }
 
 
