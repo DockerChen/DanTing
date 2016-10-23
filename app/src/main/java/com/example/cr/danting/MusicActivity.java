@@ -1,9 +1,14 @@
 package com.example.cr.danting;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,6 +29,7 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by cr on 2016/10/13.
@@ -38,6 +44,8 @@ public class MusicActivity extends Activity {
     private TextView lrc;
     //歌曲播放时间显示
     private TextView time_start, time_end;
+    //歌曲名
+    private TextView songname;
     //歌曲切换，播放停止按钮
     private ImageButton play, forward, next;
     private MediaPlayer mediaPlayer;
@@ -59,6 +67,9 @@ public class MusicActivity extends Activity {
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("mm:ss");
     SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("mm:ss.ms");
 
+    //定义传感器
+    private SensorManager sensorManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +86,10 @@ public class MusicActivity extends Activity {
         //初始化
         initAllViews();
         initAllDatum(song_name);
+        //传感器
+        sensorManager=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
+        Sensor sensor=sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorManager.registerListener(listener,sensor,SensorManager.SENSOR_DELAY_NORMAL);
 
 
         //播放，暂停
@@ -199,6 +214,8 @@ public class MusicActivity extends Activity {
 
     }
 
+
+
     /*监听返回键*/
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -224,6 +241,7 @@ public class MusicActivity extends Activity {
         lrc = (TextView) findViewById(R.id.lrc);
         time_start = (TextView) findViewById(R.id.time_start);
         time_end = (TextView) findViewById(R.id.time_end);
+        songname=(TextView)findViewById(R.id.songname);
         play = (ImageButton) findViewById(R.id.play);
         forward = (ImageButton) findViewById(R.id.forward);
         next = (ImageButton) findViewById(R.id.next);
@@ -280,6 +298,7 @@ public class MusicActivity extends Activity {
                     System.out.println("s_time: " + lyricInfo.song_lines.get(i).s_time);
                     System.out.println(lyricInfo.song_lines.get(i).content);
                 }
+                songname.setText(song_name);
                 display_lrc.setText(stringBuffer.toString());
 
             }
@@ -403,8 +422,33 @@ public class MusicActivity extends Activity {
         try {
             afd = am.openFd(string);
             mediaPlayer = new MediaPlayer();
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                    try {
+                        int current=0;
+                        for(int i=0;i<song_names.length;i++){
+                            if(song_names[i].equals(song_name)){
+                                current=i;
+                            }
+                        }
+                        position=current;
+                        position++;
+                        if(position>=song_names.length){
+                            position=0;
+                        }
+                        song_name=song_names[position];
+                        initMediaPlayer();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    display.setText("auto change song...");
+
+                }
+            });
             mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
             mediaPlayer.prepare(); //准备
+            mediaPlayer.start();    //开始
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -424,13 +468,53 @@ public class MusicActivity extends Activity {
     @Override
     protected void onDestroy() {
 
+        super.onDestroy();
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
         }
-        super.onDestroy();
+        if(sensorManager!=null){
+            sensorManager.unregisterListener(listener);
+        }
+
     }
+
+    /*为sensor设置监听器*/
+    private SensorEventListener listener=new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent sensorEvent) {
+            float xValue=Math.abs(sensorEvent.values[0]);
+            float yValue=Math.abs(sensorEvent.values[1]);
+            float zValue=Math.abs(sensorEvent.values[2]);
+            if(xValue>15||yValue>15||zValue>15){
+                Toast.makeText(MusicActivity.this,"摇一摇",Toast.LENGTH_SHORT).show();
+                Random random=new Random();
+                int random_song=random.nextInt(song_names.length-1);
+
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+
+                try {
+                    int current=random_song;
+                    position=current;
+
+                    song_name=song_names[position];
+                    initMediaPlayer();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                display.setText("music change...");
+
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int i) {
+
+        }
+    };
 
     class MyHandler extends Handler {
 
@@ -443,13 +527,13 @@ public class MusicActivity extends Activity {
             Bundle b = msg.getData();
             int num = b.getInt("num");
             if (num == 1) {
-                int position = mediaPlayer.getCurrentPosition();
+                int position_song = mediaPlayer.getCurrentPosition();
                 int time = mediaPlayer.getDuration();
                 int max = seekBar.getMax();
-                MusicActivity.this.seekBar.setProgress(position * max / time);
+                MusicActivity.this.seekBar.setProgress(position_song * max / time);
 //                System.out.println("time:"+position*max/time);
 //                System.out.println(simpleDateFormat.format(position));
-                time_start.setText(simpleDateFormat.format(position).toString());
+                time_start.setText(simpleDateFormat.format(position_song).toString());
 //                System.out.println("position: "+simpleDateFormat1.format(position));
                 time_end.setText(simpleDateFormat.format(time).toString());
                 String string = "lrc/" + song_name + ".lrc";
@@ -471,13 +555,15 @@ public class MusicActivity extends Activity {
                         for (int i = 0; i < size; i++) {
                             stringBuffer.append(lyricInfo.song_lines.get(i).content + "\n");
                             geci = lyricInfo.song_lines.get(i).content;
-                            if (position >= 0 && (position >= lyricInfo.song_lines.get(i).start)) {
+                            if (position_song>= 0 && (position_song >= lyricInfo.song_lines.get(i).start)) {
                                 lrc.setText(geci);
 
                             }
 //                                System.out.println("s_time: "+lyricInfo.song_lines.get(i).s_time);
 //                                System.out.println(lyricInfo.song_lines.get(i).content);
+
                         }
+                        songname.setText(song_name);
                         display_lrc.setText(stringBuffer.toString());
                     }
                 } catch (Exception e) {
