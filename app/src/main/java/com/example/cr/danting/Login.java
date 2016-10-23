@@ -46,7 +46,7 @@ public class Login extends Activity {
                 int i=check(username_text, password_text,dataBaseHelper);
 
                 if (i==1) {
-                    Intent intent = new Intent(Login.this, MusicActivity.class);
+                    Intent intent = new Intent(Login.this, MainActivity.class);
                     startActivity(intent);
 
                 } else if(i==0){

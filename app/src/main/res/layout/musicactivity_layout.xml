@@ -5,22 +5,47 @@
     android:layout_height="match_parent"
     android:background="@android:color/darker_gray"
     android:backgroundTint="@android:color/darker_gray">
-    <TextView
-        android:text="hello"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
 
-        android:layout_marginStart="23dp"
-        android:layout_marginTop="71dp"
-        android:id="@+id/display"
-        android:textColor="@color/colorAccent" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:weightSum="1"
+        android:layout_above="@+id/play"
+        android:layout_alignParentStart="true">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:id="@+id/time_start"
+            android:layout_weight="0.05"/>
 
+        <SeekBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/forward"
+            android:layout_alignStart="@+id/forward"
+            android:layout_marginBottom="19dp"
+            android:id="@+id/seekBar"
+            android:layout_alignParentEnd="true"
+            android:layout_weight="0.9" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:id="@+id/time_end"
+            android:layout_weight="0.05"/>
     </LinearLayout>
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/forward"
+        android:id="@+id/forward"
+        android:backgroundTint="@android:color/darker_gray"
+        android:layout_marginEnd="22dp"
+        android:layout_alignParentBottom="true"
+        android:layout_toStartOf="@+id/play" />
 
     <ImageButton
         android:layout_width="wrap_content"
@@ -29,9 +54,9 @@
 
         android:id="@+id/next"
         android:backgroundTint="@android:color/darker_gray"
+        android:layout_marginStart="22dp"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="33dp" />
+        android:layout_toEndOf="@+id/play" />
 
     <ImageButton
         android:layout_width="wrap_content"
@@ -43,24 +68,49 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
 
-    <ImageButton
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/forward"
-        android:layout_alignTop="@+id/play"
-        android:layout_alignStart="@+id/display"
-        android:id="@+id/forward"
-        android:backgroundTint="@android:color/darker_gray" />
+        android:orientation="vertical"
+        android:layout_alignParentStart="true">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="music"
+            android:id="@+id/display"/>
 
-    <SeekBar
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/forward"
-        android:layout_alignStart="@+id/forward"
-        android:layout_marginBottom="19dp"
-        android:id="@+id/seekBar"
-        android:layout_alignParentEnd="true"
-      />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:id="@+id/statue_bar"/>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="262dp"
+            android:overScrollMode="never"
+            android:layout_marginRight="12dp">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:text="Hello World!"
+                android:id="@+id/display_lrc"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true" />
+
+        </ScrollView>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="lrc"
+            android:id="@+id/lrc"
+            android:textColor="@color/colorAccent"
+            android:textStyle="normal|bold"
+            android:textAllCaps="false"
+            android:textSize="24sp" />
+    </LinearLayout>
 
 
 </RelativeLayout>
