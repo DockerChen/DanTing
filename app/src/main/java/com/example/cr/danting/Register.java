@@ -36,7 +36,7 @@ public class Register extends Activity {
             @Override
             public void onClick(View view) {
                 String username_text = Register.this.register_user.getText().toString();
-                String password_text = Register.this.register_user.getText().toString();
+                String password_text = Register.this.register_password.getText().toString();
                 int c = zhuce(username_text, password_text);
 
                 if (c==2) {
@@ -47,7 +47,7 @@ public class Register extends Activity {
                 } else if (c==0) {
                     String message_error = "账号或密码不能为空，请重新输入";
                     Toast.makeText(getApplicationContext(), message_error, Toast.LENGTH_SHORT).show();
-                }else {
+                } else {
                     String message_error = "该账号已存在，请重新输入";
                     Toast.makeText(getApplicationContext(), message_error, Toast.LENGTH_SHORT).show();
 
@@ -57,7 +57,7 @@ public class Register extends Activity {
 
     }
 
-
+    //进行用户名和密码的验证
     public int zhuce(String username, String password) {
         username=username.replace(" ", "");
         password=password.replace(" ", "");
@@ -71,7 +71,7 @@ public class Register extends Activity {
 
             SQLiteDatabase db = dataBaseHelper.getReadableDatabase();
             String sql = "select * from User where username=?";
-            Cursor cursor = db.rawQuery(sql, new String[]{username});
+            Cursor cursor = db.rawQuery(sql, new String[]{username});   //获取数据库查询结果的集合
             if (cursor.moveToFirst()) {
                 cursor.close();
                 i = 0;
@@ -94,7 +94,7 @@ public class Register extends Activity {
         }
 
     }
-
+    /*判断输入的值是否为空*/
     public static boolean isEmpty( String input )
     {
         if ( input == null || "".equals( input ) )

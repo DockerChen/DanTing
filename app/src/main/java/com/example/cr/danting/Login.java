@@ -50,7 +50,7 @@ public class Login extends Activity {
                     startActivity(intent);
 
                 } else if(i==0){
-                    Toast.makeText(getApplicationContext(), "请先注册", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "用户名或密码不能为空", Toast.LENGTH_SHORT).show();
 
                 }
                 else{
@@ -67,28 +67,25 @@ public class Login extends Activity {
         });
     }
 
-
+    //进行用户名和密码的验证
     public int check(String username, String password,DataBaseHelper d) {
         username=username.replace(" ", "");
         password=password.replace(" ", "");
 
 
         if (isEmpty(username) || isEmpty(password)){
-            return 0;//未注册
+            return 0;//用户名或密码为空
         }
         else{
 
             SQLiteDatabase db=d.getReadableDatabase();
             String sql = "select * from User";
-            Cursor cursor = db.rawQuery(sql,null);
-            int p=2;
+            Cursor cursor = db.rawQuery(sql,null);  //获取数据库查询结果的集合
+            int p=2;    //用户名和密码输入错误
             while(cursor.moveToNext()){
                 if(username.equals(cursor.getString(1))&&password.equals(cursor.getString(2)))
                 {
-                    p=1;
-//                    System.out.println(username+" "+password);
-//                    System.out.println(cursor.getInt(0)+" "+cursor.getString(1)+" "+cursor.getString(2));
-//                    System.out.println(username.equals(cursor.getString(1))+" "+password.equals(cursor.getString(2)));
+                    p=1;    //用户名和密码输入正确
                     return p;
                 }
             }
@@ -98,6 +95,7 @@ public class Login extends Activity {
         }
 
     }
+    /*判断输入的值是否为空*/
     public static boolean isEmpty( String input )
     {
         if ( input == null || "".equals( input ) )

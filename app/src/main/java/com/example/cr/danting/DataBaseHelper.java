@@ -17,6 +17,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        //创建User表
         sqLiteDatabase.execSQL("create table User(id INTEGER PRIMARY KEY AUTOINCREMENT,username varchar(20),password varchar(20))");
 //        Toast.makeText(mContext,"create succeed",Toast.LENGTH_SHORT).show();
         System.out.println("create succeed");

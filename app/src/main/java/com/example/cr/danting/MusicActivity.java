@@ -48,11 +48,13 @@ public class MusicActivity extends Activity {
     private TextView songname;
     //歌曲切换，播放停止按钮
     private ImageButton play, forward, next;
+    //定义MediaPlayer对象
     private MediaPlayer mediaPlayer;
     //歌曲播放进度条
     private SeekBar seekBar;
 
     private View statueBar;
+    //歌词信息
     private LyricInfo lyricInfo;
     //单个歌曲名字
     private String song_name;
@@ -65,8 +67,6 @@ public class MusicActivity extends Activity {
 
     //时间格式化
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("mm:ss");
-    SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("mm:ss.ms");
-
     //定义传感器
     private SensorManager sensorManager;
 
@@ -78,19 +78,21 @@ public class MusicActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             setTranslucentStatus();
         }
+        //获取MainActivity传过来的intent
         Intent intent = getIntent();
+        //获取用户点击的歌曲名
         song_name = intent.getStringExtra("song_name");
-        System.out.println("intent----" + song_name);
+//        System.out.println("intent----" + song_name);
         //获取所有歌曲名
         song_names = this.getResources().getStringArray(R.array.song_names);
-        //初始化
+        //初始化布局
         initAllViews();
+        //初始化歌词信息
         initAllDatum(song_name);
-        //传感器
+        //定义传感器对象
         sensorManager=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
         Sensor sensor=sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(listener,sensor,SensorManager.SENSOR_DELAY_NORMAL);
-
 
         //播放，暂停
         play.setOnClickListener(new View.OnClickListener() {
@@ -177,17 +179,20 @@ public class MusicActivity extends Activity {
 
         //进度条
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            // 触发操作，拖动
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
 
             }
 
+            // 表示进度条刚开始拖动，开始拖动时候触发的操作
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
 
 
             }
 
+            // 停止拖动时候
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int dest = seekBar.getProgress();
@@ -198,18 +203,22 @@ public class MusicActivity extends Activity {
                 int t = mediaPlayer.getDuration();
                 int m = seekBar.getMax();
                 float dp = p * m / t;
+                //显示当前歌曲的播放时间
                 Toast.makeText(MusicActivity.this, "time:" + simpleDateFormat.format(p), Toast.LENGTH_SHORT).show();
 
 
             }
         });
 
-        //初始化mediaplayer
+
         try {
+            //初始化mediaplayer
             initMediaPlayer();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
 
 
     }
@@ -246,10 +255,11 @@ public class MusicActivity extends Activity {
         forward = (ImageButton) findViewById(R.id.forward);
         next = (ImageButton) findViewById(R.id.next);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
-        MyThread myThread = new MyThread();
-        new Thread(myThread).start();
         statueBar = findViewById(R.id.statue_bar);
         statueBar.getLayoutParams().height = getStatusBarHeight();
+        //创建线程
+        MyThread myThread = new MyThread();
+        new Thread(myThread).start();
 
 
     }
@@ -275,19 +285,7 @@ public class MusicActivity extends Activity {
 
     private void initAllDatum(String song_name) {
         String string = "lrc/" + song_name + ".lrc";
-        System.out.println("initalldatum--------" + string);
-
-//        String string_lrc = getFromAssets(string);
-//        System.out.println(string_lrc);
-//        InputStream in = getResources().openRawResource(R.raw.yici_lrc);
-//        InputStream in= null;
-//        try {
-//            in = getAssets().open(string);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        display_lrc.setText(string_lrc);
+//        System.out.println("initalldatum--------" + string);
         try {
             setupLyricResource(string);
             StringBuffer stringBuffer = new StringBuffer();
@@ -295,10 +293,12 @@ public class MusicActivity extends Activity {
                 int size = lyricInfo.song_lines.size();
                 for (int i = 0; i < size; i++) {
                     stringBuffer.append(lyricInfo.song_lines.get(i).content + "\n");
-                    System.out.println("s_time: " + lyricInfo.song_lines.get(i).s_time);
-                    System.out.println(lyricInfo.song_lines.get(i).content);
+//                    System.out.println("s_time: " + lyricInfo.song_lines.get(i).s_time);
+//                    System.out.println(lyricInfo.song_lines.get(i).content);
                 }
+                //显示歌曲名
                 songname.setText(song_name);
+                //显示歌词信息
                 display_lrc.setText(stringBuffer.toString());
 
             }
@@ -326,6 +326,8 @@ public class MusicActivity extends Activity {
 //    }
 
 
+
+    /*读取歌词信息*/
     private void setupLyricResource(String fileName) {
 
         try {
@@ -335,7 +337,7 @@ public class MusicActivity extends Activity {
             BufferedReader reader = new BufferedReader(inputStreamReader);
             String line = null;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+//                System.out.println(line);
                 analyzeLyric(lyricInfo, line);
 
             }
@@ -385,10 +387,12 @@ public class MusicActivity extends Activity {
             lineInfo.start = measureStarTimeMillis(line.substring(0, 10));
             lineInfo.s_time = line.substring(1, 9);
             lyricInfo.song_lines.add(lineInfo);
+            return;
 
         }
     }
 
+    /*将每句歌词对应的时间进行格式化*/
     private long measureStarTimeMillis(String str) {
         long minute = Long.parseLong(str.substring(1, 3));
         long second = Long.parseLong(str.substring(4, 6));
@@ -397,15 +401,16 @@ public class MusicActivity extends Activity {
 
     }
 
+    /*存储歌曲信息的类*/
     class LyricInfo {
         List<LineInfo> song_lines;
         String song_artist; //歌手
         String song_title;  //标题
         String song_album;  //专辑
-
         long song_offset;   //偏移量
     }
 
+    /*存储歌词信息的类*/
     class LineInfo {
         String content; //歌词内容
         long start; //开始时间
@@ -415,10 +420,11 @@ public class MusicActivity extends Activity {
 
     /*音乐播放器初始化*/
     private void initMediaPlayer() throws IOException {
-        AssetManager am = this.getAssets();//获得该应用的AssetManager
+        //获得该应用的AssetManager
+        AssetManager am = this.getAssets();
         AssetFileDescriptor afd = null;
         String string = "song/" + song_name + ".mp3";
-        System.out.println("initMediaPlayer------" + string);
+//        System.out.println("initMediaPlayer------" + string);
         try {
             afd = am.openFd(string);
             mediaPlayer = new MediaPlayer();
@@ -516,6 +522,7 @@ public class MusicActivity extends Activity {
         }
     };
 
+    /*Handler，主要用于发送和处理消息，发送消息使用sendMessage()方法，处理消息使用handleMessage()方法*/
     class MyHandler extends Handler {
 
 
@@ -538,14 +545,7 @@ public class MusicActivity extends Activity {
                 time_end.setText(simpleDateFormat.format(time).toString());
                 String string = "lrc/" + song_name + ".lrc";
 
-                /*ceshi*/
-//                InputStream in = null;
-//                try {
-//                    in = getResources().getAssets().open(string);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                if (in != null) {
+
                 try {
                     String geci;
                     setupLyricResource(string);
@@ -577,6 +577,7 @@ public class MusicActivity extends Activity {
         }
     }
 
+    /*定义一个线程，用于自动切换歌词*/
     class MyThread implements Runnable {
         @Override
         public void run() {
@@ -586,6 +587,7 @@ public class MusicActivity extends Activity {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                //Message用于在线程之间传递消息
                 Message msg = new Message();
                 Bundle b = new Bundle();// 存放数据
                 b.putInt("num", 1);
